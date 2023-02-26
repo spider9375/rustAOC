@@ -23,19 +23,6 @@ enum Type {
     Scissors = 3,
 }
 
-impl std::fmt::Display for Type {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let res = match self {
-            Type::Rock => {"Rock"}
-            Type::Paper => {"Paper"}
-            Type::Scissors => {"Scissors"}
-        };
-        write!(f, "{}", res)
-    }
-}
-
-
-
 fn match_input(input: char) -> Result<Type, ()> {
     match input {
         'X' => Ok(Type::Rock),
@@ -63,7 +50,7 @@ fn calculate_points_first_part(input: &str) -> Option<u32> {
             .split(' ')
             .filter_map(|c| match_input(c.parse::<char>().ok().unwrap()).ok())
             .collect::<Vec<Type>>())
-        .map(|vec| (vec.first().copied().unwrap(), vec.last().copied().unwrap()))
+        .map(|vec| build_tuple_from_vec(vec))
         .map(|(a,b)|  calc_res_part_1(a,b) as u32 + b as u32)
         .sum();
 
@@ -78,11 +65,32 @@ fn calculate_points_second_part(input: &str) -> Option<u32> {
             .split(' ')
             .filter_map(|c| c.parse::<char>().ok())
             .collect::<Vec<char>>())
-        .map(|vec| (match_input(vec.first().copied().unwrap()).ok().unwrap(), match_result(vec.last().copied().unwrap()).ok().unwrap()))
+        .map(|vec| {
+            let (enemy, result) = match (vec.first(), vec.last()) {
+                (Some(&enemy), Some(&result)) => (enemy, result),
+                _ => panic!("Invalid")
+            };
+
+            let (enemy, result) = match (match_input(enemy).ok(), match_result(result).ok()) {
+                (Some(enemy), Some(result)) => (enemy, result),
+                _ => panic!("Invalid")
+            };
+
+            return (enemy, result);
+        })
         .map(|(a, result)| figure_shape(a, result) as u32 + result as u32)
         .sum();
 
     return Some(result);
+}
+
+fn build_tuple_from_vec(vec: Vec<Type>) -> (Type, Type){
+    let (first, last) = match (vec.first(), vec.last()) {
+        (Some(&first), Some(&last)) => (first, last),
+        _ => panic!("Vec must have first and last")
+    };
+
+    return (first, last);
 }
 
 fn match_result(input: char) -> Result<Res, ()> {
